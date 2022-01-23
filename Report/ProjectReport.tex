@@ -98,7 +98,7 @@ Mattia Marchi - 817587 - m.marchi@campus.unimib.it   \\[1cm] % Your name
 
 
 \begin{abstract}
-    Una immagine vale più di mille parole. Sapevi che un' immagine può salvare più di mille vite? Milioni di animali randagi soffrono per le strade o vengono soppressi nei rifugi ogni giorno in tutto il mondo. È chiaro aspettarsi che gli animali con foto più "attraenti" generino più interesse e vengano adottati più velocemente. Ma cosa rende "attraente" una immagine? Con l'aiuto del Deep Learning si è cercato di determinare l'attrattiva di una foto di un animale al fine di dargli una maggiore possibilità di adozione. In questo documento sono illustrate le tecniche e le soluzioni adottate, tramite l'unione di diversi modelli di deep neural network, per ottenere tale score di popolarità. 
+    Una immagine vale più di mille parole. Sapevi che un'immagine può salvare più di mille vite? Milioni di animali randagi soffrono per le strade o vengono soppressi nei rifugi ogni giorno in tutto il mondo. È chiaro aspettarsi che gli animali con foto più "attraenti" generino più interesse e vengano adottati più velocemente. Ma cosa rende "attraente" una immagine? Con l'aiuto del Deep Learning si è cercato di determinare l'attrattiva di una foto di un animale al fine di dargli una maggiore possibilità di adozione. In questo documento sono illustrate le tecniche e le soluzioni adottate, tramite l'unione di diversi modelli di deep neural network, per ottenere tale score di popolarità. 
 \end{abstract}
 
 \section{Introduzione}
@@ -179,12 +179,12 @@ Mattia Marchi - 817587 - m.marchi@campus.unimib.it   \\[1cm] % Your name
 
     La competizione proposta da PetFinder.my si presenta come un problema di regressione, con l'obiettivo di creare un modello capace di assegnare un punteggio di attrattività, 
     compreso tra 0 e 100, ad una determinata foto di un animale.
-    Nei seguenti paragrafi verrano presentati i vari step che hanno portato alla definizione del modello finale utilizzato per il task sopra descritto.
+    Nei seguenti paragrafi verranno presentati i vari step che hanno portato alla definizione del modello finale utilizzato per il task sopra descritto.
     Si è partiti da alcuni modelli di deep learning più tradizionali, quali fully-connected neural networks e convolutional neural networks, per poi cercare di combinare le informazioni
     contenute nelle immagini con le informazioni date dai metadati allegati alle foto.
     Si anticipa che l'approccio finale proposto è basato su un modello ibrido che combina gli score delle varie reti al fine di utilizzare più informazioni possibili.
     
-    Un ultimo dettaglio da considerare rigurdante l'approccio adottato, è la scelta di non utilizzare data augmentation sulle immagini. Questo è dovuto alla correlazione tra estetica dell'immagine e score di pawpularity, quindi anche un leggero cambiamento di colore o visualizzazione andrebbe ad alterare il punteggio finale. 
+    Un ultimo dettaglio da considerare riguardante l'approccio adottato, è la scelta di non utilizzare data augmentation sulle immagini. Questo è dovuto alla correlazione tra estetica dell'immagine e score di pawpularity, quindi anche un leggero cambiamento di colore o visualizzazione andrebbe ad alterare il punteggio finale. 
 
     \subsection{Convolutional neural network}
     \label{cnn}
@@ -217,7 +217,7 @@ Mattia Marchi - 817587 - m.marchi@campus.unimib.it   \\[1cm] % Your name
             \label{fig:efficientnet}
         \end{figure}
         
-        Inoltre, i pesi importati, sono quelli ottenuti tramite la tecnica di training Noisy Student. Noisy Student è una metodo di apprendimento semi-supervisionato che si basa sull'allenare un modello (teacher) con immagini etichettate, utilizzarlo per etichettare nuove immagini e allenare un nuovo modello (student), della stessa grandezza o maggiore, con le immagini iniziali e quelle nuove ottenute dal primo modello aggiugendo del rumore. Questi passi vengono poi ripetuti più volte, invertendo teacher e student. Attraverso questa tecnica, utilizzando 300 milioni di immagini non etichettate, EfficientNet-B7 "Noisy Student" ha raggiunto una top-1 accuracy su ImageNet pari al 88.4\%. Questo approccio è stato scelto inoltre perché consente una generalizzazione migliore. \cite{xie2020selftraining}
+        Inoltre, i pesi importati, sono quelli ottenuti tramite la tecnica di training Noisy Student. Noisy Student è una metodo di apprendimento semi-supervisionato che si basa sull'allenare un modello (teacher) con immagini etichettate, utilizzarlo per etichettare nuove immagini e allenare un nuovo modello (student), della stessa grandezza o maggiore, con le immagini iniziali e quelle nuove ottenute dal primo modello aggiungendo del rumore. Questi passi vengono poi ripetuti più volte, invertendo teacher e student. Attraverso questa tecnica, utilizzando 300 milioni di immagini non etichettate, EfficientNet-B7 "Noisy Student" ha raggiunto una top-1 accuracy su ImageNet pari al 88.4\%. Questo approccio è stato scelto inoltre perché consente una generalizzazione migliore. \cite{xie2020selftraining}
 
         In coda alla rete pre-allenata importata, sono stati aggiunti dei layer fully-connected per adattare il modello al problema di regressione di PetFinder.my, mentre in testa alla rete è stato aggiunto un layer di preprocessing dei dati per rendere le immagini adatte ad essere trattate da EfficientNet. Di seguito
         è specificata l'architettura della sezione aggiunta:
@@ -257,10 +257,10 @@ Mattia Marchi - 817587 - m.marchi@campus.unimib.it   \\[1cm] % Your name
 
 
     \subsection{Addestramento}
-    L'addestramento del modello finale descritto nel paragrafo \ref{mulinput}, è avvenuto allenando prima separatamente i due modelli di cui è composto. Entrambe le reti sono state allenate utilizzando una grandezza di batch di 32, per un massimo di 30 epoche, usando in entrambi i casi dei checkpoint basati sul valore minore di validation loss per evitare casi di overfitting. 
+    L'addestramento del modello finale descritto nel paragrafo \ref{mulinput}, è avvenuto allenando prima separatamente i due modelli di cui è composto. Il dataset è stato inoltre suddiviso ulteriormente in training e validation set, con rispettivamente 90\% e 10\% dei dati. Entrambe le reti sono state allenate utilizzando una grandezza di batch di 32, per un massimo di 30 epoche, usando in entrambi i casi dei checkpoint basati sul valore minore di validation loss per evitare casi di overfitting, utilizzando i pesi migliori ottenuti. 
 
     I due modelli allenati sono stati successivamente uniti per andare a formare la rete ibrida e i loro pesi sono stati bloccati, così da poter effettuare il training 
-    solo sulla sezione aggiunta in seguito alla concatenzaione dei risultati.
+    solo sulla sezione aggiunta in seguito alla concatenazione dei risultati.
     Il modello ibrido è stato allenato con grandezza di batch pari a 32, per un massimo di 30 epoche, anche in questo caso utilizzando dei checkpoint.
 
 
@@ -274,7 +274,7 @@ La metrica usata per la valutazione delle performance, essendo un task di regres
 con $\hat{y}_i$ il valore di popolarità predetto e $y_i$ il valore originale.
 
 
-Le performance vengono valutate nelle varie epoche, sia sul training set che sul validation set. Tale valutazione viene effettuata prima sui singoli modelli e successivamente sul modello finale, ottenuto tramite la concatenazione dei primi due. E' possibile notare, in figura \ref{fig:rmse-all} come nella rete finale non ci sia traccia di overfitting, a differenza del modello ottenuto dalla rete convoluzionale in cui, sul train set, lo score continua a decrescere con un peggioramento sul validation set. 
+Le performance vengono valutate nelle varie epoche, sia sul training set che sul validation set. Tale valutazione viene effettuata prima sui singoli modelli e successivamente sul modello finale, ottenuto tramite la concatenazione dei primi due. È possibile notare, in figura \ref{fig:rmse-all} come nella rete finale non ci sia traccia di overfitting, a differenza del modello ottenuto dalla rete convoluzionale in cui, sul train set, lo score continua a decrescere con un peggioramento sul validation set. 
 Nella tabella \ref{table:rmse} vengono raffigurati i valori migliori ottenuti sul validation set per le varie architetture.
 
 \begin{table}[H]
@@ -303,7 +303,7 @@ Hybrid  & 17.31           & 299.74   \\ \hline
 
 \subsection{Grad CAM}
 
-Un problema noto del deep learning è rappresentato dal fatto che i modelli creati siano "black box", ovvero che sia difficilmente spiegabile come realmente le informazioni siano trattate all'interno dei vari layer. Per analizzare i risultati ottenuti è stato ritenuto opportuno effettuare un ulteriore studio su come la rete convoluzionale ragionasse sulle immagini per ottenere lo score di popolarità. Questo è possibile utilizzando lo strumento \textbf{Grad CAM}\cite{2019}. Tale metodo consente di produrre una spiegazione visiva di ciò che la rete osserva, determinando quali sono gli aspetti e le feature che più influenzano lo score finale. E' possibile notare nella figura \ref{fig:grad-cam} come la rete si vada a focalizzare maggiormente sull'animale nel caso in cui l'immagine risulti pulita da oggetti di disturbo; al contrario, se l'immagine presenta disturbi di vario genere, la rete andrà a dare maggior importanza all'ambiente circostante piuttosto che al solo animale.
+Un problema noto del deep learning è rappresentato dal fatto che i modelli creati siano "black box", ovvero che sia difficilmente spiegabile come realmente le informazioni siano trattate all'interno dei vari layer. Per analizzare i risultati ottenuti è stato ritenuto opportuno effettuare un ulteriore studio su come la rete convoluzionale ragionasse sulle immagini per ottenere lo score di popolarità. Questo è possibile utilizzando lo strumento \textbf{Grad CAM}\cite{2019}. Tale metodo consente di produrre una spiegazione visiva di ciò che la rete osserva, determinando quali sono gli aspetti e le feature che più influenzano lo score finale. È possibile notare nella figura \ref{fig:grad-cam} come la rete si vada a focalizzare maggiormente sull'animale nel caso in cui l'immagine risulti pulita da oggetti di disturbo; al contrario, se l'immagine presenta disturbi di vario genere, la rete andrà a dare maggior importanza all'ambiente circostante piuttosto che al solo animale.
 
 \vspace{1cm}
 
@@ -326,7 +326,7 @@ L'obiettivo di questo caso di studio è stato determinare se, l'uso congiunto di
 
 L'ipotesi formulata, sebbene non supportata da una grande quantità di materiale presente in letteratura, è stata confermata empiricamente dai risultati ottenuti portando ad un miglioramento significativo delle performance. Tuttavia i risultati ottenuti non sono competitivi rispetto a quelli derivanti dall'utilizzo di nuove tecniche avanzate, quali transformer.
 
-Un possibile sviluppo futuro, può essere la sostitusione della rete convoluzionale con un transformer e l'utilizzo di una risoluzione maggiore per le immagini, migliorie che devono essere necessariamente supportate da un hardware adeguato.
+Un possibile sviluppo futuro, può essere la sostituzione della rete convoluzionale con un transformer e l'utilizzo di una risoluzione maggiore per le immagini, migliorie che devono essere necessariamente supportate da un hardware adeguato.
 
 \bibliographystyle{IEEEtran}
 \bibliography{references.bib}
